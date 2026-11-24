@@ -44,6 +44,9 @@ hshare uploaders         list uploaders
 hshare -u clipboard area use another uploader this once
 ```
 
+The packages also add **hShare** to your application menu: click it to capture a region, or
+right-click it for full screen, window and recording.
+
 Each capture is saved to `~/Screenshots`, then uploaded. The link (or the image, for the
 `clipboard` uploader) ends up in your clipboard.
 
