@@ -10,16 +10,30 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      TARGET: x86_64-unknown-linux-musl
     steps:
       - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - run: rustup target add $TARGET
       - run: cargo test
-      - run: cargo build --release
-      - run: |
-          cp target/release/hshare hshare-x86_64-linux
-          tar czf hshare-${GITHUB_REF_NAME}-x86_64-linux.tar.gz hshare-x86_64-linux README.md LICENSE
+      # Static musl binary: runs on any distro regardless of glibc version.
+      - run: cargo build --release --target $TARGET
+      - run: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.41.0
+      - name: Package
+        run: |
+          export VERSION=${GITHUB_REF_NAME#v}
+          mkdir dist
+          cp target/$TARGET/release/hshare dist/hshare-x86_64-linux
+          tar czf dist/hshare-$VERSION-x86_64-linux.tar.gz -C dist hshare-x86_64-linux -C .. README.md LICENSE
+          for p in deb rpm archlinux; do ~/go/bin/nfpm package -p $p -t dist/; done
+          ls -l dist
+      - name: Install-test packages
+        run: |
+          docker run --rm -v $PWD/dist:/d debian:stable sh -c 'apt-get update -qq && apt-get install -y -qq /d/*.deb >/dev/null && hshare -V'
+          docker run --rm -v $PWD/dist:/d fedora:latest sh -c 'dnf install -y -q /d/*.rpm >/dev/null && hshare -V'
+          docker run --rm -v $PWD/dist:/d archlinux:latest sh -c 'pacman -U --noconfirm /d/*.pkg.tar.zst >/dev/null && hshare -V'
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-          files: |
-            hshare-x86_64-linux
-            hshare-*-x86_64-linux.tar.gz
+          files: dist/*

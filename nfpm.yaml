@@ -1,0 +1,23 @@
+# Builds .deb, .rpm and Arch packages: nfpm package -p deb|rpm|archlinux
+name: hshare
+arch: amd64
+version: ${VERSION}
+maintainer: org-helix <noreply@github.com>
+description: Screenshot, record and upload from the Linux command line (Rust rewrite of KShare)
+homepage: https://github.com/org-helix/hshare
+license: MIT
+contents:
+  - src: target/x86_64-unknown-linux-musl/release/hshare
+    dst: /usr/bin/hshare
+  - src: README.md
+    dst: /usr/share/doc/hshare/README.md
+  - src: LICENSE
+    dst: /usr/share/licenses/hshare/LICENSE
+  - src: icons/icon.svg
+    dst: /usr/share/icons/hicolor/scalable/apps/hshare.svg
+# Capture tools differ per desktop (spectacle, grim, maim...), so they are only recommended.
+overrides:
+  deb:
+    recommends: [libnotify-bin, wl-clipboard, xclip, ffmpeg]
+  rpm:
+    recommends: [libnotify, wl-clipboard, xclip, ffmpeg]

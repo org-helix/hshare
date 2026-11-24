@@ -15,7 +15,16 @@ hShare uses your desktop's own capture tools, so it works on Wayland and X11:
 
 ## Install
 
-Download `hshare` from the [releases](https://github.com/org-helix/hshare/releases) page, or build it yourself:
+Grab a package from the [releases](https://github.com/org-helix/hshare/releases) page:
+
+| Distro | File | Install |
+|---|---|---|
+| Debian, Ubuntu, Mint | `hshare_*_amd64.deb` | `sudo apt install ./hshare_*_amd64.deb` |
+| Fedora, openSUSE, RHEL | `hshare-*.x86_64.rpm` | `sudo dnf install ./hshare-*.x86_64.rpm` |
+| Arch, Manjaro | `hshare-*-x86_64.pkg.tar.zst` | `sudo pacman -U hshare-*-x86_64.pkg.tar.zst` |
+| Any other | `hshare-x86_64-linux` | static binary, put it in your `PATH` |
+
+Or build it yourself:
 
 ```bash
 cargo install --git https://github.com/org-helix/hshare
