@@ -7,7 +7,7 @@ hShare uses your desktop's own capture tools, so it works on Wayland and X11:
 
 | Session | Screenshots | Recording | Clipboard |
 |---|---|---|---|
-| KDE Plasma | `spectacle` | `spectacle` | `wl-clipboard` / `xclip` |
+| KDE Plasma | `spectacle` | [`gpu-screen-recorder`](https://git.dec05eba.com/gpu-screen-recorder/about/) | `wl-clipboard` / `xclip` |
 | sway, Hyprland, other wlroots | `grim` + `slurp` | `wf-recorder` + `slurp` | `wl-clipboard` |
 | X11 | `maim` + `xdotool` | `ffmpeg` + `slop` | `xclip` |
 
@@ -29,6 +29,7 @@ hshare area              select a region and capture it
 hshare window            capture the active window (KDE, X11)
 hshare record [area|full|window]
                          start recording; run it again to stop and upload
+                         (on KDE, KDE's screen picker chooses what to record)
 hshare upload <file>     upload an existing file
 hshare uploaders         list uploaders
 hshare -u clipboard area use another uploader this once

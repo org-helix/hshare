@@ -256,9 +256,14 @@ fn record(cfg: &Config, mode: &str) -> Res<()> {
     let rp = rec_path.to_str().ok_or("non UTF-8 save path")?.to_string();
 
     let mut cmd: Vec<String> = match backend() {
+        // Spectacle can't record in background mode; KDE's portal dialog picks the screen or window.
         Backend::Spectacle => {
-            let m = match mode { "full" => "s", "window" => "w", _ => "r" };
-            vec!["spectacle".into(), "-b".into(), "-n".into(), "-R".into(), m.into(), "-o".into(), rp.clone()]
+            let mut c: Vec<String> = ["gpu-screen-recorder", "-w", "portal", "-f", "60"].map(String::from).to_vec();
+            if rec_path.extension().is_some_and(|e| e == "webm") {
+                c.extend(["-k".into(), "vp9".into()]);
+            }
+            c.extend(["-o".into(), rp.clone()]);
+            c
         }
         Backend::Grim => {
             let mut c = vec!["wf-recorder".into(), "-y".into(), "-f".into(), rp.clone()];
@@ -291,7 +296,7 @@ fn record(cfg: &Config, mode: &str) -> Res<()> {
     let _ = fs::remove_file(&pidfile);
     status.map_err(|e| e.to_string())?;
     if !rec_path.exists() {
-        return Ok(()); // cancelled
+        return Err(format!("'{}' saved no recording", cmd[0]));
     }
     if format == "gif" {
         cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", &rp, "-vf",

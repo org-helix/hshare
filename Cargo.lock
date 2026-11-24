@@ -153,7 +153,7 @@ dependencies = [
 
 [[package]]
 name = "hshare"
-version = "5.0.0"
+version = "5.0.1"
 dependencies = [
  "base64",
  "chrono",
