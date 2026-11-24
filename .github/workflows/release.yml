@@ -13,8 +13,8 @@ permissions:
 
 jobs:
   build:
-    # Oldest supported Ubuntu: the binary then runs on any newer glibc.
-    runs-on: ubuntu-22.04
+    # Oldest Ubuntu with a PipeWire the Rust bindings accept; the binary runs on any newer glibc.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable

@@ -18,7 +18,7 @@ Grab a package from the [releases](https://github.com/org-helix/hshare/releases)
 
 | Distro | File | Install |
 |---|---|---|
-| Debian 12+, Ubuntu 22.04+, Mint | `hshare_*_amd64.deb` | `sudo apt install ./hshare_*_amd64.deb` |
+| Debian 13+, Ubuntu 24.04+, Mint 22+ | `hshare_*_amd64.deb` | `sudo apt install ./hshare_*_amd64.deb` |
 | Fedora, openSUSE | `hshare-*.x86_64.rpm` | `sudo dnf install ./hshare-*.x86_64.rpm` |
 | Arch, Manjaro | `hshare-*-x86_64.pkg.tar.zst` | `sudo pacman -U hshare-*-x86_64.pkg.tar.zst` |
 
