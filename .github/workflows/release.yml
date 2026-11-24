@@ -23,7 +23,15 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libpipewire-0.3-dev libclang-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
-      - run: cargo test --locked
+      - name: Test
+        # Compiler errors also go into an annotation, readable without access to the logs.
+        run: |
+          set -o pipefail
+          cargo test --locked 2>&1 | tee test.log || {
+            msg=$(grep -E -A14 '^(error|test .* FAILED|---- )' test.log | head -200 | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')
+            echo "::error title=cargo test::$msg"
+            exit 1
+          }
       - run: cargo build --release --locked
       - uses: actions/setup-go@v5
         with:
