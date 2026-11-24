@@ -75,12 +75,12 @@ fn x11(slot: &Slot, stop: &AtomicBool) -> Result<(), String> {
 }
 
 #[cfg(not(feature = "portal"))]
-fn portal(_: &Slot, _: &AtomicBool) -> Result<(), String> {
+fn portal(_: &Arc<Slot>, _: &Arc<AtomicBool>) -> Result<(), String> {
     Err("hShare was built without Wayland capture (the \"portal\" feature)".into())
 }
 
 #[cfg(feature = "portal")]
-fn portal(slot: &Slot, stop: &AtomicBool) -> Result<(), String> {
+fn portal(slot: &Arc<Slot>, stop: &Arc<AtomicBool>) -> Result<(), String> {
     use ashpd::desktop::PersistMode;
     use ashpd::desktop::screencast::{CursorMode, Screencast, SelectSourcesOptions, SourceType};
 
@@ -110,11 +110,12 @@ fn portal(slot: &Slot, stop: &AtomicBool) -> Result<(), String> {
             e => e.to_string(),
         })?;
     let node = node.ok_or("the portal returned no stream")?;
-    pipewire_stream(fd, node, slot, stop).map_err(|e| format!("PipeWire: {e}"))
+    pipewire_stream(fd, node, slot.clone(), stop.clone()).map_err(|e| format!("PipeWire: {e}"))
 }
 
 #[cfg(feature = "portal")]
-fn pipewire_stream(fd: std::os::fd::OwnedFd, node: u32, slot: &Slot, stop: &AtomicBool) -> Result<(), pipewire::Error> {
+// The PipeWire callbacks must own what they use.
+fn pipewire_stream(fd: std::os::fd::OwnedFd, node: u32, slot: Arc<Slot>, stop: Arc<AtomicBool>) -> Result<(), pipewire::Error> {
     use pipewire as pw;
     use pw::spa;
     use pw::spa::param::video::VideoFormat;
@@ -142,7 +143,7 @@ fn pipewire_stream(fd: std::os::fd::OwnedFd, node: u32, slot: &Slot, stop: &Atom
                 let _ = info.parse(param);
             }
         })
-        .process(|stream, info| {
+        .process(move |stream, info| {
             let Some(mut buffer) = stream.dequeue_buffer() else { return };
             let datas = buffer.datas_mut();
             let Some(d) = datas.first_mut() else { return };
