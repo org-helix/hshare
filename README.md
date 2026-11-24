@@ -1,67 +1,88 @@
-# The entire project has been moved to GitLab. https://gitlab.com/ArsenArsen/KShare
-# The current state of the project can be considered on hold for the time being. When I am back on working there will be a pretty big new release and a new wiki.
+# hShare
 
-# KShare
-A [ShareX](https://getsharex.com/) inspired cross platform utility written with Qt.
+Screenshot, record and upload from the Linux command line. A Rust rewrite of
+[KShare](https://github.com/ArsenArsen/KShare) (itself inspired by [ShareX](https://getsharex.com/)).
 
-|Linux|Windows|OS X|
-|:---:|:-----:|:--:|
-|[![Build Status](https://nativeci.arsenarsen.com/job/KShare/badge/icon)](https://nativeci.arsenarsen.com/job/KShare)| [![Build Status](https://nativeci.arsenarsen.com/job/KShare%20Windows%20x86_64/badge/icon)](https://nativeci.arsenarsen.com/job/KShare%20Windows%20x86_64/)| Soon |
-## Screenshot
-Made with KShare itself, of course :)
+hShare uses your desktop's own capture tools, so it works on Wayland and X11:
 
-![](http://i.imgur.com/ffWvCun.png)
+| Session | Screenshots | Recording | Clipboard |
+|---|---|---|---|
+| KDE Plasma | `spectacle` | `spectacle` | `wl-clipboard` / `xclip` |
+| sway, Hyprland, other wlroots | `grim` + `slurp` | `wf-recorder` + `slurp` | `wl-clipboard` |
+| X11 | `maim` + `xdotool` | `ffmpeg` + `slop` | `xclip` |
 
-## Usage
-See the [wiki](https://github.com/ArsenArsen/KShare/wiki).
-
-## Dependencies
-* Qt 5 Widgets
-* Qt 5 GUI
-* Qt 5 Network
-* Qt 5 X11Extras | Winextras
-* [QHotkey](https://github.com/Skycoder42/QHotkey)
-* libavformat
-* libavcodec
-* libavutil
-* libswscale
-
-Despite the name implying so, this project does not depend on the KDE API at all.
-
-## Goals
-See the [projects](https://github.com/ArsenArsen/KShare/projects)
+`notify-send` shows notifications, and GIF recordings need `ffmpeg`.
 
 ## Install
 
-### **NOTE:** These links are temporarily down and will be fixed with the next release. Current (potentially unstable) development builds are available at [this location](https://nativeci.arsenarsen.com/job/KShare%20(dev))
+Download `hshare` from the [releases](https://github.com/org-helix/hshare/releases) page, or build it yourself:
 
-|Distro|Link|
-|:----:|:--:|
-|Arch Linux (development)|[kshare-git](https://aur.archlinux.org/packages/kshare-git/)|
-|Ubuntu (development)|[Ubuntu .deb](https://nativeci.arsenarsen.com/job/KShare/lastSuccessfulBuild/artifact/packages/simpleName.deb)|
-|Arch Linux |[kshare](https://aur.archlinux.org/packages/kshare/)|
-|Ubuntu |[Ubuntu .deb](https://nativeci.arsenarsen.com/job/KShare%20Stable/lastSuccessfulBuild/artifact/packages/simpleName.deb)|
-
-I do plan to make a Debian packages.
-
-For other UNIX-like platforms, and MSYS2 (for Windows):
-
-You have to obtain the dependencies though.
 ```bash
-git clone https://github.com/ArsenArsen/KShare.git
-cd KShare
-qmake // Might be qmake-qt5 on your system
-make
+cargo install --git https://github.com/org-helix/hshare
 ```
 
-On systems with FFMpeg pre-3.1 you need to apply `OlderSystemFix.patch` to `recording/encoders/encoder.cpp`.
-On systems with Qt pre-5.7 you need to install the Qt version from their website.
+## Usage
 
-## Support (and contact)
-There's a few ways to get support, you can:
-* join `#kshare` on [Freenode](https://webchat.freenode.net/?channels=kshare)
-* open an issue
+```
+hshare full              capture all screens
+hshare area              select a region and capture it
+hshare window            capture the active window (KDE, X11)
+hshare record [area|full|window]
+                         start recording; run it again to stop and upload
+hshare upload <file>     upload an existing file
+hshare uploaders         list uploaders
+hshare -u clipboard area use another uploader this once
+```
 
-If someone can answer, they probably will.
+Each capture is saved to `~/Screenshots`, then uploaded. The link (or the image, for the
+`clipboard` uploader) ends up in your clipboard.
 
-###### Started on 19th of April 2017 to bring some attention and improvement to Linux screenshotting.
+Global hotkeys come from your desktop: bind these commands in System Settings → Shortcuts
+(KDE), in your sway or Hyprland config, or in your window manager's keybindings.
+
+## Configuration
+
+`~/.config/hshare/config.json`. Every key is optional:
+
+```json
+{
+  "uploader": "imgur",
+  "save_dir": "~/Screenshots",
+  "file_format": "Screenshot %(yyyy-MM-dd HH:mm:ss)date.%ext",
+  "capture_format": "png",
+  "recording_format": "webm",
+  "imgur_token": null
+}
+```
+
+- `uploader`: `imgur`, `clipboard`, or the `name` of a custom uploader.
+- `capture_format`: `png` or `jpg`. `recording_format`: `webm`, `mp4` or `gif`.
+- `imgur_token`: an imgur OAuth access token to upload to your account. Without one, uploads are anonymous.
+
+### Custom uploaders
+
+Put KShare-format `.uploader` files in `~/.config/hshare/uploaders/`. Example:
+
+```json
+{
+  "name": "myhost",
+  "target": "https://example.com/upload",
+  "format": "multipart-form-data",
+  "headers": { "Authorization": "secret" },
+  "body": [{
+    "__Content-Disposition": "form-data; name=\"file\"; filename=\"upload\"",
+    "__Content-Type": "/%contenttype/",
+    "body": "/%imagedata/"
+  }],
+  "return": ".data.url"
+}
+```
+
+- `format`: `multipart-form-data`, `json` (requires `"base64": true`), `x-www-form-urlencoded` or `plain`.
+- Strings wrapped in `/.../` have `%imagedata` and `%contenttype` replaced.
+- `return`: a path such as `.data.url` into the JSON response, `.` for the whole response, or `|` for the raw body.
+- Optional: `base64` (encode the file), `fileLimit` (max body size in bytes).
+
+## License
+
+MIT, see [LICENSE](LICENSE).

@@ -1,0 +1,17 @@
+[package]
+name = "hshare"
+version = "5.0.0"
+edition = "2021"
+description = "Screenshot, record and upload from the Linux command line (Rust rewrite of KShare)"
+license = "MIT"
+repository = "https://github.com/org-helix/hshare"
+
+[dependencies]
+base64 = "0.22"
+chrono = "0.4"
+serde_json = "1"
+ureq = "2"
+
+[profile.release]
+strip = true
+lto = true
