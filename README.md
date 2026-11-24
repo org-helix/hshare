@@ -1,17 +1,16 @@
 # hShare
 
-Screenshot, record and upload from the Linux command line. A Rust rewrite of
-[KShare](https://github.com/ArsenArsen/KShare) (itself inspired by [ShareX](https://getsharex.com/)).
+Share your screen between computers on the same network, written in Rust with
+[egui](https://github.com/emilk/egui), in the Helix look shared with
+[netlix](https://github.com/org-helix/netlix).
 
-hShare uses your desktop's own capture tools, so it works on Wayland and X11:
+- **Share my screen**: type the other device's code and your screen appears on it.
+- **See their screen**: show the other device's screen here, once its user accepts.
+- **Send a file**: it lands in the other device's Downloads folder.
+- **USB share button**: plug in the share puck (USB id `022b:3001`) and press it to start or stop sharing.
 
-| Session | Screenshots | Recording | Clipboard |
-|---|---|---|---|
-| KDE Plasma | `spectacle` | [`gpu-screen-recorder`](https://git.dec05eba.com/gpu-screen-recorder/about/) | `wl-clipboard` / `xclip` |
-| sway, Hyprland, other wlroots | `grim` + `slurp` | `wf-recorder` + `slurp` | `wl-clipboard` |
-| X11 | `maim` + `xdotool` | `ffmpeg` + `slop` | `xclip` |
-
-`notify-send` shows notifications, and GIF recordings need `ffmpeg`.
+Each device shows a 6-digit code. The code finds the device on the network and proves
+you can see its screen, so nobody can cast to it without being in the room.
 
 ## Install
 
@@ -19,83 +18,34 @@ Grab a package from the [releases](https://github.com/org-helix/hshare/releases)
 
 | Distro | File | Install |
 |---|---|---|
-| Debian, Ubuntu, Mint | `hshare_*_amd64.deb` | `sudo apt install ./hshare_*_amd64.deb` |
-| Fedora, openSUSE, RHEL | `hshare-*.x86_64.rpm` | `sudo dnf install ./hshare-*.x86_64.rpm` |
+| Debian 12+, Ubuntu 22.04+, Mint | `hshare_*_amd64.deb` | `sudo apt install ./hshare_*_amd64.deb` |
+| Fedora, openSUSE | `hshare-*.x86_64.rpm` | `sudo dnf install ./hshare-*.x86_64.rpm` |
 | Arch, Manjaro | `hshare-*-x86_64.pkg.tar.zst` | `sudo pacman -U hshare-*-x86_64.pkg.tar.zst` |
-| Any other | `hshare-x86_64-linux` | static binary, put it in your `PATH` |
 
-Or build it yourself:
+Then open **hShare** from the application menu.
+
+On Wayland (KDE, GNOME, sway, Hyprland...) your desktop asks which screen or window to
+share each time. On X11 without a portal, hShare shares the whole screen.
+
+## Network
+
+hShare uses TCP port 47800 and UDP port 47801 (discovery by code). If a firewall is on,
+open them, for example `sudo ufw allow 47800/tcp && sudo ufw allow 47801/udp`.
+
+When the code isn't found (another subnet, or broadcast blocked), type the device's IP
+address before the code: `192.168.1.20 482913`.
+
+Traffic is not encrypted: use hShare on a network you trust.
+
+## Build
 
 ```bash
-cargo install --git https://github.com/org-helix/hshare
+sudo apt install libpipewire-0.3-dev libclang-dev
+cargo build --release
 ```
 
-## Usage
-
-```
-hshare full              capture all screens
-hshare area              select a region and capture it
-hshare window            capture the active window (KDE, X11)
-hshare record [area|full|window]
-                         start recording; run it again to stop and upload
-                         (on KDE, KDE's screen picker chooses what to record)
-hshare upload <file>     upload an existing file
-hshare uploaders         list uploaders
-hshare -u clipboard area use another uploader this once
-```
-
-The packages also add **hShare** to your application menu: click it to capture a region, or
-right-click it for full screen, window and recording.
-
-Each capture is saved to `~/Screenshots`, then uploaded. The link (or the image, for the
-`clipboard` uploader) ends up in your clipboard.
-
-Global hotkeys come from your desktop: bind these commands in System Settings → Shortcuts
-(KDE), in your sway or Hyprland config, or in your window manager's keybindings.
-
-## Configuration
-
-`~/.config/hshare/config.json`. Every key is optional:
-
-```json
-{
-  "uploader": "imgur",
-  "save_dir": "~/Screenshots",
-  "file_format": "Screenshot %(yyyy-MM-dd HH:mm:ss)date.%ext",
-  "capture_format": "png",
-  "recording_format": "webm",
-  "imgur_token": null
-}
-```
-
-- `uploader`: `imgur`, `clipboard`, or the `name` of a custom uploader.
-- `capture_format`: `png` or `jpg`. `recording_format`: `webm`, `mp4` or `gif`.
-- `imgur_token`: an imgur OAuth access token to upload to your account. Without one, uploads are anonymous.
-
-### Custom uploaders
-
-Put KShare-format `.uploader` files in `~/.config/hshare/uploaders/`. Example:
-
-```json
-{
-  "name": "myhost",
-  "target": "https://example.com/upload",
-  "format": "multipart-form-data",
-  "headers": { "Authorization": "secret" },
-  "body": [{
-    "__Content-Disposition": "form-data; name=\"file\"; filename=\"upload\"",
-    "__Content-Type": "/%contenttype/",
-    "body": "/%imagedata/"
-  }],
-  "return": ".data.url"
-}
-```
-
-- `format`: `multipart-form-data`, `json` (requires `"base64": true`), `x-www-form-urlencoded` or `plain`.
-- Strings wrapped in `/.../` have `%imagedata` and `%contenttype` replaced.
-- `return`: a path such as `.data.url` into the JSON response, `.` for the whole response, or `|` for the raw body.
-- Optional: `base64` (encode the file), `fileLimit` (max body size in bytes).
+`cargo build --no-default-features` builds without PipeWire (X11 capture only).
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE). Fonts: Geist and Bricolage Grotesque, SIL Open Font License.

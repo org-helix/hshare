@@ -1,39 +1,48 @@
 name: release
 
+# Push a tag like v6.0.0 to build the packages and publish a GitHub release.
+# Every push builds and tests the same way, without publishing.
 on:
   push:
+    branches: ['**']
     tags: ["v*"]
+  pull_request:
 
 permissions:
   contents: write
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
-    env:
-      TARGET: x86_64-unknown-linux-musl
+  build:
+    # Oldest supported Ubuntu: the binary then runs on any newer glibc.
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y musl-tools
-      - run: rustup target add $TARGET
-      - run: cargo test
-      # Static musl binary: runs on any distro regardless of glibc version.
-      - run: cargo build --release --target $TARGET
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: System libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpipewire-0.3-dev libclang-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+      - run: cargo test --locked
+      - run: cargo build --release --locked
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
       - run: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.41.0
       - name: Package
         run: |
-          export VERSION=${GITHUB_REF_NAME#v}
+          export VERSION=$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)
           mkdir dist
-          cp target/$TARGET/release/hshare dist/hshare-x86_64-linux
-          tar czf dist/hshare-$VERSION-x86_64-linux.tar.gz -C dist hshare-x86_64-linux -C .. README.md LICENSE
-          for p in deb rpm archlinux; do ~/go/bin/nfpm package -p $p -t dist/; done
+          for p in deb rpm archlinux; do ~/go/bin/nfpm package -f packaging/linux/nfpm.yaml -p $p -t dist/; done
           ls -l dist
       - name: Install-test packages
         run: |
-          docker run --rm -v $PWD/dist:/d debian:stable sh -c 'apt-get update -qq && apt-get install -y -qq /d/*.deb >/dev/null && hshare -V'
-          docker run --rm -v $PWD/dist:/d fedora:latest sh -c 'dnf install -y -q /d/*.rpm >/dev/null && hshare -V'
-          docker run --rm -v $PWD/dist:/d archlinux:latest sh -c 'pacman -U --noconfirm /d/*.pkg.tar.zst >/dev/null && hshare -V'
+          docker run --rm -v $PWD/dist:/d debian:stable sh -c 'apt-get update -qq && apt-get install -y -qq /d/*.deb >/dev/null && hshare --version'
+          docker run --rm -v $PWD/dist:/d ubuntu:24.04 sh -c 'apt-get update -qq && apt-get install -y -qq /d/*.deb >/dev/null && hshare --version'
+          docker run --rm -v $PWD/dist:/d fedora:latest sh -c 'dnf install -y -q /d/*.rpm >/dev/null && hshare --version'
+          docker run --rm -v $PWD/dist:/d archlinux:latest sh -c 'pacman -Sy --noconfirm >/dev/null && pacman -U --noconfirm /d/*.pkg.tar.zst >/dev/null && hshare --version'
       - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
         with:
           generate_release_notes: true
           files: dist/*

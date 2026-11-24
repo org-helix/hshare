@@ -1,0 +1,2 @@
+# USB share button (022b:3001): readable by the logged-in user, for hShare.
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="022b", ATTRS{idProduct}=="3001", TAG+="uaccess"

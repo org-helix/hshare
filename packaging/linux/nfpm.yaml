@@ -1,0 +1,36 @@
+# Builds .deb, .rpm and Arch packages from the repository root:
+#   VERSION=6.0.0 nfpm package -f packaging/linux/nfpm.yaml -p deb|rpm|archlinux
+name: hshare
+arch: amd64
+version: ${VERSION}
+maintainer: org-helix <noreply@github.com>
+description: Share your screen between computers on the same network
+homepage: https://github.com/org-helix/hshare
+license: MIT
+contents:
+  - src: target/release/hshare
+    dst: /usr/bin/hshare
+  - src: packaging/linux/hshare.desktop
+    dst: /usr/share/applications/hshare.desktop
+  - src: assets/icon/hshare.svg
+    dst: /usr/share/icons/hicolor/scalable/apps/hshare.svg
+  - src: assets/icon/hshare.png
+    dst: /usr/share/icons/hicolor/256x256/apps/hshare.png
+  - src: packaging/linux/70-hshare-button.rules
+    dst: /usr/lib/udev/rules.d/70-hshare-button.rules
+  - src: LICENSE
+    dst: /usr/share/licenses/hshare/LICENSE
+  - src: assets/fonts/OFL-Geist.txt
+    dst: /usr/share/licenses/hshare/OFL-Geist.txt
+  - src: assets/fonts/OFL-BricolageGrotesque.txt
+    dst: /usr/share/licenses/hshare/OFL-BricolageGrotesque.txt
+# The screen-cast portal and PipeWire do the capture on Wayland.
+overrides:
+  deb:
+    depends: [libpipewire-0.3-0 | libpipewire-0.3-0t64]
+    recommends: [xdg-desktop-portal]
+  rpm:
+    depends: [pipewire-libs]
+    recommends: [xdg-desktop-portal]
+  archlinux:
+    depends: [libpipewire]

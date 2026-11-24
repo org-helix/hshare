@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=hShare
+GenericName=Screen sharing
+GenericName[fr]=Partage d'écran
+Comment=Share your screen with another computer on the network
+Comment[fr]=Partager votre écran avec un autre ordinateur du réseau
+Exec=hshare
+Icon=hshare
+Terminal=false
+Categories=Network;RemoteAccess;
+Keywords=screen;share;cast;mirror;partage;écran;
+StartupWMClass=hshare
