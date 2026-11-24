@@ -8,7 +8,7 @@ Comment[fr]=Capturer une zone et l'envoyer
 Exec=hshare area
 Icon=hshare
 Terminal=false
-Categories=Graphics;Utility;
+Categories=Utility;
 Keywords=screenshot;capture;upload;record;imgur;
 Actions=full;window;record;
 

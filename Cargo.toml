@@ -1,6 +1,6 @@
 [package]
 name = "hshare"
-version = "5.0.3"
+version = "5.0.4"
 edition = "2021"
 description = "Screenshot, record and upload from the Linux command line (Rust rewrite of KShare)"
 license = "MIT"
